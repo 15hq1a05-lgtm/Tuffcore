@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TuffCore Order</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            background: #f4f6f8;
+            margin: 0;
+            padding: 10px;
+        }
+
+        h2 {
+            background: #0b5ed7;
+            color: white;
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .item {
+            background: white;
+            padding: 10px;
+            margin: 8px 0;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .qty {
+            width: 80px;
+            font-size: 18px;
+            text-align: center;
+            padding: 5px;
+            margin-right: 5px;
+        }
+
+        .btn {
+            padding: 6px 10px;
+            margin: 3px;
+            border: none;
+            border-radius: 6px;
+            background: #198754;
+            color: white;
+            font-size: 14px;
+        }
+
+        .confirm {
+            width: 100%;
+            padding: 15px;
+            font-size: 20px;
+            background: #25D366;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h2>TuffCore Order Sheet</h2>
+
+    <div id="form"></div>
+
+    <button class="confirm" onclick="sendOrder()">CONFIRM ORDER</button>
+
+    <script>
+
+        const phone = "+91 9652344851";
+
+        const categories = {
+            "1\" DEEP": ["1 Way", "2 Way", "3 Way", "4 Way", "L Way"],
+            "1\" BOX": ["1 Way", "2 Way", "3 Way", "4 Way", "L Way"],
+            "3/4\" DEEP": ["1 Way", "2 Way", "3 Way", "4 Way", "L Way"],
+            "3/4\" BOX": ["1 Way", "2 Way", "3 Way", "4 Way", "L Way"],
+            "CEILING PLATES": ["4 Hole (Normal)", "2 Hole (Dummy)"]
+        };
+
+        const container = document.getElementById("form");
+
+        function sanitizeId(str) {
+            return str.replace(/[^a-zA-Z0-9]/g, "_");
+        }
+
+        for (const cat in categories) {
+            let title = document.createElement("h2");
+            title.innerText = cat;
+            container.appendChild(title);
+
+            categories[cat].forEach(item => {
+                let div = document.createElement("div");
+                div.className = "item";
+
+                let safeId = sanitizeId(cat + "-" + item);
+
+                div.innerHTML = `
+        <b>${item}</b><br><br>
+        <input type="number" min="0" value="0" class="qty" id="${safeId}" data-cat="${cat}" data-item="${item}">
+        <button class="btn" onclick="add('${safeId}',50)">+50</button>
+        <button class="btn" onclick="add('${safeId}',100)">+100</button>
+        <button class="btn" onclick="add('${safeId}',200)">+200</button>
+        `;
+
+                container.appendChild(div);
+            });
+        }
+
+        function add(id, val) {
+            let el = document.getElementById(id);
+            el.value = parseInt(el.value || 0) + val;
+        }
+
+        function getDealer() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('d') || "Dealer";
+        }
+
+        function sendOrder() {
+
+            let message = "TUFFCORE ORDER%0A%0A";
+            message += "Dealer: " + getDealer() + "%0A%0A";
+
+            let total = 0;
+
+            for (const cat in categories) {
+
+                let catText = "";
+
+                categories[cat].forEach(item => {
+                    let safeId = sanitizeId(cat + "-" + item);
+                    let qty = parseInt(document.getElementById(safeId).value || 0);
+
+                    if (qty > 0) {
+                        catText += item + " - " + qty + "%0A";
+                        total += qty;
+                    }
+                });
+
+                if (catText !== "") {
+                    message += cat + "%0A" + catText + "%0A";
+                }
+            }
+
+            if (total === 0) {
+                alert("Please add at least one item to your order.");
+                return;
+            }
+
+            message += "TOTAL PCS: " + total;
+
+            window.open("https://wa.me/" + phone + "?text=" + message, "_blank");
+
+        }
+
+    </script>
+
+</body>
+
+</html>
